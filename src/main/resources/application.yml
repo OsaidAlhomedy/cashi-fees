@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: cashi-fees
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cashi}
+    username: ${DB_USER:cashi}
+    password: ${DB_PASSWORD:cashi}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+restate:
+  sdk:
+    http:
+      # SDK port
+      port: ${RESTATE_SDK_PORT:9080}
+  client:
+    # Restate ingress. Your Spring code calls OUT to this.
+    base-uri: ${RESTATE_INGRESS_URL:http://localhost:8081}
+
+logging:
+  level:
+    com.cashi.fees: DEBUG
+
+# TODO: decide if the config should be in the db or here
+# what in my mind, I can use fees_config table that stores every fee type with its config
+# maybe cache these configs for faster retreiveal, with TTL of 5 minutes ???
+# or I will use a cdc event from the database to change it if they ever change
+cashi:
+  fees:
+    rules: {}
