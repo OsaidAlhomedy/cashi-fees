@@ -11,7 +11,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
-
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 server:
   port: ${SERVER_PORT:8080}
 
@@ -34,10 +35,21 @@ logging:
   level:
     com.cashi.fees: DEBUG
 
+
+
 # TODO: decide if the config should be in the db or here
 # what in my mind, I can use fees_config table that stores every fee type with its config
 # maybe cache these configs for faster retreiveal, with TTL of 5 minutes ???
 # or I will use a cdc event from the database to change it if they ever change
 cashi:
   fees:
-    rules: {}
+    rules:
+      "[Mobile Top Up]":
+        type: PERCENTAGE
+        rate: 0.0015
+        description: "Standard fee rate of 0.15%"
+
+      "[Bill Payment]":
+        type: PERCENTAGE
+        rate: 0.0020
+        description: "Standard fee rate of 0.20%"

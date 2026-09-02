@@ -1,4 +1,4 @@
-FROM gradle:8.12-jdk21 AS build
+FROM gradle:9-jdk25 AS build
 WORKDIR /app
 COPY settings.gradle.kts build.gradle.kts gradle.properties ./
 RUN gradle dependencies --no-daemon || true

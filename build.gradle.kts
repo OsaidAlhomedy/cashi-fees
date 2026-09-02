@@ -1,9 +1,9 @@
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.spring") version "2.1.0"
-    kotlin("plugin.serialization") version "2.1.0"
-    kotlin("plugin.allopen") version "2.1.0"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    kotlin("jvm") version "2.3.10"
+    kotlin("plugin.spring") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.10"
+    kotlin("plugin.allopen") version "2.3.10"
+    id("com.google.devtools.ksp") version "2.3.10"
     id("org.springframework.boot") version "3.5.13"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -12,7 +12,7 @@ group = "com.cashi"
 version = "0.1.0"
 
 java {
-    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
+    toolchain { languageVersion.set(JavaLanguageVersion.of(25)) }
 }
 
 repositories { mavenCentral() }
@@ -22,9 +22,14 @@ allOpen {
     annotation("dev.restate.sdk.annotation.Service")
     annotation("dev.restate.sdk.annotation.VirtualObject")
     annotation("dev.restate.sdk.annotation.Workflow")
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.Embeddable")
+    annotation("jakarta.persistence.MappedSuperclass")
 }
 
-// Restate 2.9.2+ needs Netty >= 4.1.132; Spring's BOM can pin an older one.
 extra["netty.version"] = "4.1.132.Final"
 
 val restateVersion = "2.9.3"
@@ -55,6 +60,7 @@ dependencies {
     testImplementation("org.junit.platform:junit-platform-suite")
     testImplementation("dev.restate:sdk-testing:$restateVersion")
     testRuntimeOnly("com.h2database:h2")
+    testImplementation(kotlin("test"))
 }
 
 kotlin {

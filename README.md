@@ -10,6 +10,9 @@ TODO
 
     ./gradlew test
 
+## Open Questions
+1- are amounts represented as minor or major units ?
+
 ## Resources
 
 [Bealdung for Kotlin](https://www.baeldung.com/kotlin/)
