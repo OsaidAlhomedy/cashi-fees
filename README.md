@@ -62,7 +62,9 @@ cashi:
 
 ## Open Questions
 1- are amounts represented as minor or major units ?
+
 2- can a transaction amount be zero ?? in other words do I need to validate it my assumption is yes
+
 3- what do I mean by charging step ??
 
 ## Resources
