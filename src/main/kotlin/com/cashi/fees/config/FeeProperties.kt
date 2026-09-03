@@ -12,7 +12,6 @@ import java.math.BigDecimal
 @ConfigurationProperties(prefix = "cashi.fees")
 data class FeeProperties(
     val rules: Map<String, RuleConfig> = emptyMap(),
-    val defaultAccountPrefix: String = "account_fees",
 ) {
     data class RuleConfig(
         val type: RuleType,
@@ -38,5 +37,5 @@ class FeeConfiguration {
         )
     }
 
-    // TODO : MORE RULES CAN BE ADDED LATER
+    // TODO : MORE RULES CAN BE ADDED LATER ( FIXED .... )
 }

@@ -12,6 +12,8 @@ TODO
 
 ## Open Questions
 1- are amounts represented as minor or major units ?
+2- can a transaction amount be zero ??
+3- why do restate need the classes to be srializble (BidDecimal has no serializer, it needs custom)
 
 ## Resources
 

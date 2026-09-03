@@ -13,6 +13,9 @@ spring:
     enabled: true
   jackson:
     property-naming-strategy: SNAKE_CASE
+  threads:
+    virtual:
+      enabled: true
 server:
   port: ${SERVER_PORT:8080}
 
@@ -35,6 +38,13 @@ logging:
   level:
     com.cashi.fees: DEBUG
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  paths-to-match: /transaction/**
 
 
 # TODO: decide if the config should be in the db or here

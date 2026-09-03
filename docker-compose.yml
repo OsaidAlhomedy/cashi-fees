@@ -3,7 +3,7 @@ services:
   restate:
     image: docker.restate.dev/restatedev/restate:latest
     ports:
-      - "8081:8081"
+      - "8081:8080"
       - "9070:9070"
       - "9071:9071"
     healthcheck:
@@ -44,14 +44,13 @@ services:
       interval: 5s
       retries: 20
 
-  # Restate does not auto-discover services. Without this, every call 404s.
+  # restate has no automatic service registery so I added this cli register
   register:
-    image: curlimages/curl:8.11.1
+    image: docker.restate.dev/restatedev/restate-cli:latest
+    environment:
+      RESTATE_ADMIN_URL: http://restate:9070
     depends_on:
       fees-app: { condition: service_healthy }
     restart: on-failure
     command: >
-      -sS --fail-with-body
-      -X POST http://restate:9070/deployments
-      -H "content-type: application/json"
-      -d '{"uri": "http://fees-app:9080", "force": true}'
+      --yes deployments register http://fees-app:9080

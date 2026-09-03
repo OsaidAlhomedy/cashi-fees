@@ -4,7 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.springframework.data.jpa.repository.JpaRepository
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -36,14 +35,12 @@ class FeeRecord(
     @Column(name = "charge_id", nullable = false)
     var chargeId: String = "",
 
-    @Column(name = "account_id", nullable = false)
-    var accountId: String = "",
-
     @Column(nullable = false)
     var state: String = "",
 
     @Column(name = "recorded_at", nullable = false)
     var recordedAt: Instant = Instant.EPOCH,
-)
 
-interface FeeRecordRepository : JpaRepository<FeeRecord, String>
+    @Column(name = "charged_at", nullable = false)
+    var chargedAt: Instant = Instant.EPOCH,
+)
