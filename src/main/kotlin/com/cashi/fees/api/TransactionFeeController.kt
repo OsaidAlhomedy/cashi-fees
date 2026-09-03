@@ -5,8 +5,6 @@ import com.cashi.fees.api.dto.TransactionFeeResponse
 import com.cashi.fees.mapper.TransactionMapper
 import com.cashi.fees.workflow.FeeWorkFlow
 import dev.restate.client.Client
-import dev.restate.client.kotlin.attachSuspend
-import dev.restate.client.kotlin.toWorkflow
 import dev.restate.client.kotlin.workflow
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -47,15 +45,14 @@ class TransactionFeeController(private val restateClient: Client,private val map
     @PostMapping("/transaction/fee")
     fun chargeFee(@Valid @RequestBody request : TransactionFeeRequest) : ResponseEntity<TransactionFeeResponse> {
 
+
         val txn = mapper.toDomain(request)
 
         log.info("Submitting fee workflow for {}", request)
 
         val response = runBlocking {
-            val handle = restateClient.toWorkflow<FeeWorkFlow>(txn.transactionId)
-                .request { run(txn) }
-                .send()
-            mapper.toResponse(txn, handle.attachSuspend().response())
+            val result = restateClient.workflow<FeeWorkFlow>(txn.transactionId).run(txn)
+            mapper.toResponse(txn, result)
         }
 
         return ResponseEntity.ok(response)

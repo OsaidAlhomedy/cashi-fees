@@ -6,6 +6,7 @@ import com.cashi.fees.domain.Transaction
 import com.cashi.fees.domain.TransactionState
 import com.cashi.fees.persistence.FeeRecord
 import com.cashi.fees.persistence.FeeRecordRepository
+import com.cashi.fees.shared.Utils
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -25,7 +26,7 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
                 transactionId = txn.transactionId,
                 amount = txn.amount,
                 asset = txn.asset,
-                transactionType = txn.type,
+                transactionType = Utils.normalize(txn.type),
                 fee = quote.fee,
                 rate = quote.rate,
                 description = quote.description,
