@@ -2,6 +2,9 @@
 
 RESTful fees workflow. Kotlin + Spring Boot + Restate.
 
+Note : I interpreted the charge operation as applying and recording the state change.
+I didn't implement an actual wallet debit because the API contract doesn't expose a wallet or account to debit
+
 ## Run
 
 ```bash
@@ -60,6 +63,7 @@ cashi:
 ## Open Questions
 1- are amounts represented as minor or major units ?
 2- can a transaction amount be zero ?? in other words do I need to validate it my assumption is yes
+3- what do I mean by charging step ??
 
 ## Resources
 

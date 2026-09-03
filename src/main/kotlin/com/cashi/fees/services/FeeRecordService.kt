@@ -9,7 +9,8 @@ import com.cashi.fees.persistence.FeeRecordRepository
 import com.cashi.fees.shared.Utils
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 
 @Service
@@ -31,7 +32,7 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
                 rate = quote.rate,
                 description = quote.description,
                 state = TransactionState.PENDING_FEE,
-                recordedAt = at,
+                recordedAt = at.toJavaInstant(),
             )
         )
     }
@@ -42,7 +43,7 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
             .orElseThrow { IllegalStateException("No fee record for $transactionId") }
         record.chargeId = charge.chargeId
         record.state = TransactionState.SETTLED
-        record.chargedAt = at
+        record.chargedAt = at.toJavaInstant()
     }
 
 }

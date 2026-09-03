@@ -9,6 +9,7 @@ import com.cashi.fees.services.FeeChargeService
 import com.cashi.fees.services.FeeRecordService
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
+import dev.restate.sdk.kotlin.Restate
 import dev.restate.sdk.kotlin.runBlock
 import dev.restate.sdk.kotlin.service
 import dev.restate.sdk.kotlin.state
@@ -16,22 +17,18 @@ import dev.restate.sdk.kotlin.stateKey
 import dev.restate.sdk.kotlin.virtualObject
 import dev.restate.sdk.springboot.RestateComponent
 import kotlinx.serialization.Serializable
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @RestateComponent
 @Workflow
 class FeeWorkFlow (private val feeRecordService: FeeRecordService) {
 
-    @Serializable
-    data class FeeResult(
-        val transactionId: String,
-        val quote: FeeQuote,
-        val charge: FeeCharge,
-        val state: String,
-    )
-
     @Workflow
+    @OptIn(ExperimentalTime::class)
     suspend fun run(transaction: Transaction): FeeResult {
+
+        // step 1 : get the quote
         val quote = service<FeeCalculationService>()
             .calculate(
                 FeeCalculationService.CalculationRequest(
@@ -43,15 +40,19 @@ class FeeWorkFlow (private val feeRecordService: FeeRecordService) {
 
         state().set(QUOTE, quote)
 
-        val quotedAt = Instant.now();
+        // step 2 : record the quote
+
+        val quotedAt = Clock.Restate.now() // this is needed in case of replays
         runBlock("record-quote") { feeRecordService.recordQuote(transaction, quote, quotedAt) }
 
+        // step 3 : charge the fees ( in this step I would debit the wallet but the contract doesn't mention a wallet or account id )
         val charge = virtualObject<FeeChargeService>(transaction.transactionId).charge(
             FeeChargeService.ChargeRequest(transaction.transactionId, quote.fee, transaction.asset)
         )
         state().set(CHARGE, charge)
 
-        val chargedAt = Instant.now();
+        // step 4 : mark the fee as charged
+        val chargedAt = Clock.Restate.now();
         runBlock("mark-charged") {
             feeRecordService.markCharged(transaction.transactionId, charge, chargedAt)
         }
@@ -66,6 +67,14 @@ class FeeWorkFlow (private val feeRecordService: FeeRecordService) {
         private val QUOTE = stateKey<FeeQuote>("quote")
         private val CHARGE = stateKey<FeeCharge>("charge")
     }
+
+    @Serializable
+    data class FeeResult(
+        val transactionId: String,
+        val quote: FeeQuote,
+        val charge: FeeCharge,
+        val state: String,
+    )
 
     @Shared
     suspend fun quote(): FeeQuote? = state().get(QUOTE)
