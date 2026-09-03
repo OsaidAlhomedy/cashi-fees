@@ -37,4 +37,4 @@ data class TransactionFeeRequest(
     @field:JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss[.SSSSSS][.SSS]")
     val createdAt: LocalDateTime? = null,
 
-)
+    )

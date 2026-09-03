@@ -27,7 +27,7 @@ class FeeCalculationService(
     suspend fun calculate(request: CalculationRequest): FeeQuote {
         return try {
             registry.ruleFor(request.transactionType).quote(request.amount)
-        } catch (e: NullPointerException) {
+        } catch (e: NoSuchElementException) {
             throw TerminalException(TerminalException.BAD_REQUEST_CODE, e.message)
         }
     }

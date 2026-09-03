@@ -9,12 +9,8 @@ import com.cashi.fees.services.FeeChargeService
 import com.cashi.fees.services.FeeRecordService
 import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
-import dev.restate.sdk.kotlin.Restate
-import dev.restate.sdk.kotlin.runBlock
-import dev.restate.sdk.kotlin.service
-import dev.restate.sdk.kotlin.state
-import dev.restate.sdk.kotlin.stateKey
-import dev.restate.sdk.kotlin.virtualObject
+import dev.restate.sdk.common.TerminalException
+import dev.restate.sdk.kotlin.*
 import dev.restate.sdk.springboot.RestateComponent
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -22,7 +18,7 @@ import kotlin.time.ExperimentalTime
 
 @RestateComponent
 @Workflow
-class FeeWorkFlow (private val feeRecordService: FeeRecordService) {
+class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
 
     @Workflow
     @OptIn(ExperimentalTime::class)
@@ -46,15 +42,20 @@ class FeeWorkFlow (private val feeRecordService: FeeRecordService) {
         runBlock("record-quote") { feeRecordService.recordQuote(transaction, quote, quotedAt) }
 
         // step 3 : charge the fees ( in this step I would debit the wallet but the contract doesn't mention a wallet or account id )
-        val charge = virtualObject<FeeChargeService>(transaction.transactionId).charge(
-            FeeChargeService.ChargeRequest(transaction.transactionId, quote.fee, transaction.asset)
-        )
+        val charge = try {
+            virtualObject<FeeChargeService>(transaction.transactionId).charge(
+                FeeChargeService.ChargeRequest(transaction.transactionId, quote.fee, transaction.asset))
+        }catch (e: TerminalException){
+            // TODO : I need to handle Terminal error by marking the charge failed
+            throw e
+        }
+
         state().set(CHARGE, charge)
 
         // step 4 : mark the fee as charged
         val chargedAt = Clock.Restate.now();
         runBlock("mark-charged") {
-            feeRecordService.markCharged(transaction.transactionId, charge, chargedAt)
+            feeRecordService.markCharged(transaction, quote, charge, chargedAt)
         }
 
         // TODO if more time :  maybe here I can raise an event to down stream services for analytics, reconsilation ... etc

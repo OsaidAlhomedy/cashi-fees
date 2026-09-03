@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class TransactionMapper {
 
-    fun toDomain(request : TransactionFeeRequest) = Transaction(
+    fun toDomain(request: TransactionFeeRequest) = Transaction(
         transactionId = request.transactionId,
         amount = request.amount,
         asset = request.asset,
@@ -21,7 +21,7 @@ class TransactionMapper {
         createdAt = request.createdAt?.toString() ?: "",
     )
 
-    fun toResponse(txn :Transaction, result : FeeResult) : TransactionFeeResponse {
+    fun toResponse(txn: Transaction, result: FeeResult): TransactionFeeResponse {
         return TransactionFeeResponse(
             txn.transactionId,
             txn.amount,

@@ -20,12 +20,14 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class TransactionFeeController(private val restateClient: Client,private val mapper: TransactionMapper) {
+class TransactionFeeController(private val restateClient: Client, private val mapper: TransactionMapper) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Operation(summary = "Calculate and charge the fee for a settled transaction")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [Content(examples = [ExampleObject(name = "Mobile top up", value = """
+        content = [Content(
+            examples = [ExampleObject(
+                name = "Mobile top up", value = """
         {
           "transaction_id": "txn_001",
           "amount": 1000,
@@ -35,7 +37,9 @@ class TransactionFeeController(private val restateClient: Client,private val map
           "state": "SETTLED - PENDING FEE",
           "created_at": "2023-08-30 15:42:17.610059"
         }
-    """)])]
+    """
+            )]
+        )]
     )
     @ApiResponses(
         ApiResponse(responseCode = "200", description = "Fee calculated and charged"),
@@ -43,7 +47,7 @@ class TransactionFeeController(private val restateClient: Client,private val map
         ApiResponse(responseCode = "409", description = "Fee already charged for this transaction"),
     )
     @PostMapping("/transaction/fee")
-    fun chargeFee(@Valid @RequestBody request : TransactionFeeRequest) : ResponseEntity<TransactionFeeResponse> {
+    fun chargeFee(@Valid @RequestBody request: TransactionFeeRequest): ResponseEntity<TransactionFeeResponse> {
 
 
         val txn = mapper.toDomain(request)

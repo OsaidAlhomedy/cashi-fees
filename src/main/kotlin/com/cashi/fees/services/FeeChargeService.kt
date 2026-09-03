@@ -11,7 +11,6 @@ import dev.restate.sdk.kotlin.stateKey
 import dev.restate.sdk.springboot.RestateComponent
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
-import kotlin.uuid.ExperimentalUuidApi
 
 @RestateComponent
 @VirtualObject

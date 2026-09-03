@@ -29,7 +29,7 @@ class EnumValueValidator : ConstraintValidator<EnumValue, String?> {
     override fun isValid(value: String?, ctx: ConstraintValidatorContext): Boolean {
         if (value == null) return true          // let @NotBlank own nullability
         val candidate = value.uppercase()
-        if (accepted?.contains(candidate) == true ) return true
+        if (accepted?.contains(candidate) == true) return true
 
         ctx.disableDefaultConstraintViolation()
         ctx.buildConstraintViolationWithTemplate(

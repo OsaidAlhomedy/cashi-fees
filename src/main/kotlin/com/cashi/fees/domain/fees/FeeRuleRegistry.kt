@@ -9,7 +9,7 @@ class FeeRuleRegistry(rules: Map<String, FeeRule>) {
 
     fun ruleFor(transactionType: String): FeeRule =
         byType[Utils.normalize(transactionType)]
-            ?: throw NullPointerException("No fee rule for $transactionType")
+            ?: throw NoSuchElementException("No fee rule for $transactionType")
 
     fun supportedTypes(): Set<String> = byType.keys
 }
