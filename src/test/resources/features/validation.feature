@@ -14,10 +14,10 @@ Feature: Invalid fee requests are rejected before any workflow starts
     And the error code is VALIDATION_FAILED
 
     Examples:
-      | amount      |
-      | 0           |
-      | -5          |
-      | 1000.12345  |
+      | amount     |
+      | 0          |
+      | -5         |
+      | 1000.12345 |
 
   Scenario: A non-FIAT asset type is rejected
     Given a settled transaction of 1000 USD of type "Mobile Top Up"

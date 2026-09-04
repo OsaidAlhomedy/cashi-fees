@@ -11,13 +11,15 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import java.util.UUID
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FeeSteps {
-    @Autowired lateinit var rest: TestRestTemplate
-    @Autowired lateinit var repository: FeeRecordRepository
+    @Autowired
+    lateinit var rest: TestRestTemplate
+    @Autowired
+    lateinit var repository: FeeRecordRepository
 
     private lateinit var transactionId: String
     private var amount: String = "1000"
@@ -42,10 +44,14 @@ class FeeSteps {
     }
 
     @Given("the asset type is {string}")
-    fun theAssetTypeIs(assetType: String) { this.assetType = assetType }
+    fun theAssetTypeIs(assetType: String) {
+        this.assetType = assetType
+    }
 
     @Given("the transaction id is empty")
-    fun theTransactionIdIsEmpty() { this.transactionId = "" }
+    fun theTransactionIdIsEmpty() {
+        this.transactionId = ""
+    }
 
 
     @When("the fee is requested")

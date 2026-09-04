@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class FeeRuleRegistryTest {
-    private val rule = PercentageFeeRule(BigDecimal("0.0015"),"0.15%")
+    private val rule = PercentageFeeRule(BigDecimal("0.0015"), "0.15%")
     private val registry = FeeRuleRegistry(mapOf("Mobile Top Up" to rule))
 
     @ParameterizedTest

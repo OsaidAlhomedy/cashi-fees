@@ -26,6 +26,7 @@ class FeeChargeServiceTest {
     fun setUp(@RestateURL url: String) {
         client = Client.connect(url, KotlinSerializationSerdeFactory())
     }
+
     private fun request(txnId: String) =
         FeeChargeService.ChargeRequest(txnId, BigDecimal("1.50"), "USD")
 
