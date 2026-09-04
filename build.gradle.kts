@@ -72,5 +72,9 @@ tasks.withType<Test> {
     useJUnitPlatform {
         includeEngines("junit-jupiter", "junit-platform-suite")
     }
-    jvmArgs("-XX:+EnableDynamicAgentLoading")
+    jvmArgs(
+        "-XX:+EnableDynamicAgentLoading",
+        "--sun-misc-unsafe-memory-access=allow",
+        "-Xshare:off"
+    )
 }
