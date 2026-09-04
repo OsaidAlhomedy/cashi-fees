@@ -31,6 +31,7 @@ allOpen {
 }
 
 extra["netty.version"] = "4.1.132.Final"
+extra["kotlin-serialization.version"] = "1.11.0"
 
 val restateVersion = "2.9.3"
 val cucumberVersion = "7.20.1"
@@ -46,8 +47,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.liquibase:liquibase-core")
 
     runtimeOnly("org.postgresql:postgresql")

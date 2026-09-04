@@ -7,7 +7,6 @@ import com.cashi.fees.domain.TransactionState
 import com.cashi.fees.persistence.FeeRecord
 import com.cashi.fees.persistence.FeeRecordRepository
 import com.cashi.fees.shared.Utils
-import dev.restate.sdk.common.TerminalException
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import kotlin.time.Instant
@@ -19,20 +18,32 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
 
     @Transactional
     fun recordQuote(txn: Transaction, quote: FeeQuote, at: Instant) {
-        if(repository.existsById(txn.transactionId)) return
-        repository.save(newRecord(txn, quote,at))
+        if (repository.existsById(txn.transactionId)) return
+        repository.save(newRecord(txn, quote, at))
     }
 
     @Transactional
-    fun markCharged(txn: Transaction,quote: FeeQuote, charge: FeeCharge, at: Instant) {
+    fun markCharged(txn: Transaction, quote: FeeQuote, charge: FeeCharge, at: Instant) {
         val record = repository.findById(txn.transactionId)
-            .orElseGet { newRecord(txn,quote,at) }
+            .orElseGet { newRecord(txn, quote, at) }
         record.chargeId = charge.chargeId
         record.state = TransactionState.SETTLED
         record.chargedAt = at.toJavaInstant()
+        repository.save(record)
     }
 
-    private fun newRecord(txn: Transaction,quote: FeeQuote,at: Instant) = FeeRecord(
+    @Transactional
+    fun markFailed(txnId: String, chargeId: String?) {
+        val recordOp = repository.findById(txnId)
+        if (recordOp.isEmpty) return
+
+        val record = recordOp.get()
+        if (chargeId != null) record.chargeId = chargeId
+        record.state = TransactionState.FEE_FAILED
+        repository.save(record)
+    }
+
+    private fun newRecord(txn: Transaction, quote: FeeQuote, at: Instant) = FeeRecord(
         transactionId = txn.transactionId,
         amount = txn.amount,
         asset = txn.asset,

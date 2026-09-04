@@ -3,6 +3,7 @@ package com.cashi.fees.api
 import com.cashi.fees.api.dto.ApiError
 import dev.restate.client.IngressException
 import dev.restate.sdk.common.TerminalException
+import kotlinx.coroutines.TimeoutCancellationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -62,4 +63,10 @@ class ApiExceptionHandler {
                 .body(ApiError("WORKFLOW_UNAVAILABLE", "Could not reach the fee workflow"))
         }
     }
+
+    @ExceptionHandler(TimeoutCancellationException::class)
+    fun onTimeout(e: TimeoutCancellationException): ResponseEntity<ApiError> =
+        ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+            .body(ApiError("FEE_STILL_PROCESSING", "Fee workflow did not complete in time; it is still running"))
+
 }

@@ -5,7 +5,11 @@ import com.cashi.fees.api.dto.TransactionFeeResponse
 import com.cashi.fees.mapper.TransactionMapper
 import com.cashi.fees.workflow.FeeWorkFlow
 import dev.restate.client.Client
+import dev.restate.client.IngressException
+import dev.restate.client.kotlin.attachSuspend
+import dev.restate.client.kotlin.response
 import dev.restate.client.kotlin.workflow
+import dev.restate.client.kotlin.workflowHandle
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -13,11 +17,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import jakarta.validation.Valid
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import kotlin.time.Duration.Companion.seconds
 
 @RestController
 class TransactionFeeController(private val restateClient: Client, private val mapper: TransactionMapper) {
@@ -54,11 +60,18 @@ class TransactionFeeController(private val restateClient: Client, private val ma
 
         log.info("Submitting fee workflow for {}", request)
 
-        val response = runBlocking {
-            val result = restateClient.workflow<FeeWorkFlow>(txn.transactionId).run(txn)
-            mapper.toResponse(txn, result)
+        val result = runBlocking {
+            withTimeout(30.seconds) {
+                try {
+                    restateClient.workflow<FeeWorkFlow>(txn.transactionId).run(txn)
+                } catch (e: IngressException) {
+                    if (e.statusCode != 409) throw e
+                    restateClient.workflowHandle<FeeWorkFlow.FeeResult>("FeeWorkFlow", txn.transactionId)
+                        .attachSuspend().response
+                }
+            }
         }
 
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(mapper.toResponse(txn, result))
     }
 }

@@ -7,13 +7,14 @@ import com.cashi.fees.domain.TransactionState
 import com.cashi.fees.services.FeeCalculationService
 import com.cashi.fees.services.FeeChargeService
 import com.cashi.fees.services.FeeRecordService
-import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.kotlin.*
 import dev.restate.sdk.springboot.RestateComponent
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
 @RestateComponent
@@ -24,49 +25,74 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
     @OptIn(ExperimentalTime::class)
     suspend fun run(transaction: Transaction): FeeResult {
 
-        // step 1 : get the quote
-        val quote = service<FeeCalculationService>()
-            .calculate(
-                FeeCalculationService.CalculationRequest(
-                    transaction.type,
-                    transaction.amount,
-                    transaction.asset
+        val compensations = mutableListOf<suspend () -> Unit>()
+
+        try {
+
+            // step 1 : get the quote ( if fail throw terminal )
+            val quote = service<FeeCalculationService>()
+                .calculate(
+                    FeeCalculationService.CalculationRequest(
+                        transaction.type,
+                        transaction.amount,
+                        transaction.asset
+                    )
                 )
+
+            state().set(QUOTE, quote)
+
+            // step 2 : record the quote
+
+            val quotedAt =
+                Clock.Restate.now() // this is needed in case of replays ( if failed after configured retries then terminal)
+            runBlock("record-quote", STEP_RETRY) { feeRecordService.recordQuote(transaction, quote, quotedAt) }
+
+            compensations.add { virtualObject<FeeChargeService>(transaction.transactionId).refund() }
+
+            // step 3 : charge the fees ( if failed after retries then mark the record as failed TransactionState.FEE_FAILED then throw the terminal )
+            val charge = virtualObject<FeeChargeService>(transaction.transactionId).charge(
+                FeeChargeService.ChargeRequest(transaction.transactionId, quote.fee, transaction.asset)
             )
 
-        state().set(QUOTE, quote)
+            // this state id different from the state in the virtual object
+            state().set(CHARGE, charge)
 
-        // step 2 : record the quote
+            // step 4 : mark the fee as charged ( if this failed after configured retries then do saga pattern and un-charge the transaction
+            val chargedAt = Clock.Restate.now();
+            runBlock("mark-charged", STEP_RETRY) {
+                feeRecordService.markCharged(transaction, quote, charge, chargedAt)
+            }
 
-        val quotedAt = Clock.Restate.now() // this is needed in case of replays
-        runBlock("record-quote") { feeRecordService.recordQuote(transaction, quote, quotedAt) }
+            return FeeResult(transaction.transactionId, quote, charge, TransactionState.SETTLED)
+        } catch (e: TerminalException) {
 
-        // step 3 : charge the fees ( in this step I would debit the wallet but the contract doesn't mention a wallet or account id )
-        val charge = try {
-            virtualObject<FeeChargeService>(transaction.transactionId).charge(
-                FeeChargeService.ChargeRequest(transaction.transactionId, quote.fee, transaction.asset))
-        }catch (e: TerminalException){
-            // TODO : I need to handle Terminal error by marking the charge failed
+            compensations.asReversed().forEach { it() }
+            val chargeId = state().get(CHARGE)?.chargeId
+            runCatching {
+                runBlock("mark-failed", STEP_RETRY) {
+                    feeRecordService.markFailed(
+                        transaction.transactionId,
+                        chargeId
+                    )
+                }
+            }
+
             throw e
         }
-
-        state().set(CHARGE, charge)
-
-        // step 4 : mark the fee as charged
-        val chargedAt = Clock.Restate.now();
-        runBlock("mark-charged") {
-            feeRecordService.markCharged(transaction, quote, charge, chargedAt)
-        }
-
-        // TODO if more time :  maybe here I can raise an event to down stream services for analytics, reconsilation ... etc
-
-        return FeeResult(transaction.transactionId, quote, charge, TransactionState.SETTLED)
 
     }
 
     companion object {
         private val QUOTE = stateKey<FeeQuote>("quote")
         private val CHARGE = stateKey<FeeCharge>("charge")
+
+        private val STEP_RETRY = RetryPolicy(
+            initialDelay = 200.milliseconds,
+            exponentiationFactor = 2.0f,
+            maxDelay = 5.seconds,
+            maxAttempts = 8,
+            maxDuration = 30.seconds
+        )
     }
 
     @Serializable
@@ -76,8 +102,5 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
         val charge: FeeCharge,
         val state: String,
     )
-
-    @Shared
-    suspend fun quote(): FeeQuote? = state().get(QUOTE)
 
 }

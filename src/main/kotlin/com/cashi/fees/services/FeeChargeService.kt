@@ -4,7 +4,6 @@ import com.cashi.fees.domain.BigDecimalSerializer
 import com.cashi.fees.domain.FeeCharge
 import dev.restate.sdk.annotation.Handler
 import dev.restate.sdk.annotation.VirtualObject
-import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.kotlin.random
 import dev.restate.sdk.kotlin.state
 import dev.restate.sdk.kotlin.stateKey
@@ -26,15 +25,29 @@ class FeeChargeService {
     @Handler
     suspend fun charge(request: ChargeRequest): FeeCharge {
         val s = state()
-        if (s.get(ALREADY_CHARGED) == true) {
-            throw TerminalException(TerminalException.ABORTED_CODE, "Fee already charged")
+        val charge = s.get(CHARGE)
+        if (charge != null) {
+            return charge
         }
         val chargeId = "chg_" + random().nextUUID().toString().take(8)
-        s.set(ALREADY_CHARGED, true)
-        return FeeCharge(chargeId, request.amount, request.asset)
+        val feeCharge = FeeCharge(chargeId, request.amount, request.asset)
+        s.set(CHARGE, feeCharge)
+        return feeCharge
+    }
+
+    @Handler
+    suspend fun refund() {
+        val s = state()
+        if (s.get(CHARGE) == null) return
+        if (s.get(REFUNDED) == true) return
+
+        // logic goes here for refunding
+
+        s.set(REFUNDED, true)
     }
 
     companion object {
-        private val ALREADY_CHARGED = stateKey<Boolean>("charged")
+        private val CHARGE = stateKey<FeeCharge>("charge")
+        private val REFUNDED = stateKey<Boolean>("refunded")
     }
 }
