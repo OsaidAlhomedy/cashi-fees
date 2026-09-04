@@ -68,4 +68,9 @@ kotlin {
     compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") }
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+    useJUnitPlatform {
+        includeEngines("junit-jupiter", "junit-platform-suite")
+    }
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
+}
