@@ -1,9 +1,11 @@
 # Cashi Fees Service
 
-RESTful fees workflow. Kotlin + Spring Boot + Restate.
+A RESTful fees workflow for the Cashi backend challenge: a transaction is submitted to a public                                                                                                                                   
+endpoint, and its fee is **calculated, charged and recorded** as a single durable                                                                                                                                                 
+[Restate](https://restate.dev/) workflow.
 
-Note : I interpreted the charge operation as applying and recording the state change.
-I didn't implement an actual wallet debit because the API contract doesn't expose a wallet or account to debit
+The workflow is keyed by `transaction_id`, so submitting the same transaction twice charges it                                                                                                                                    
+once — even if the app crashes halfway through.
 
 ## Run
 
@@ -27,19 +29,20 @@ curl -X POST http://localhost:8080/transaction/fee \
   }'
 ```
 
-You can also use OpenAPI Swagger http://localhost:8080/swagger-ui/index.html
+Swagger UI is at <http://localhost:8080/swagger-ui/index.html> with the request body                                                                                                                                              
+pre-populated, and the Restate UI at <http://localhost:9070>
 
-the body is already populated with default values
+## Architecture
 
-Restate admin UI is available on http://localhost:9070
+![arch.png](arch.png)
 
-### Configurations
+## Configurations
 
 You can add more transaction types rules in the **application.yml** file
 
-for the sake of the demo I kept it like this, in a real production system I think the better approach
-is to define them in the database and cache them
-and maybe a CDC update event would invalidate the cache.
+For the sake of the demo I kept the rules in config. In a real system I would put them in a                                                                                                                                       
+`fees_config` table and cache them, invalidating on a CDC event rather than a TTL, so a pricing                                                                                                                                   
+change does not need a deploy and does not go stale for five minutes.
 
 ```yml
 cashi:
@@ -58,18 +61,26 @@ cashi:
 
 ## Tests
 
-make sure that docker daemon is running first
+Make sure the Docker daemon is running — the Restate tests use Testcontainers.
 
 ```bash
   ./gradlew test --tests 'com.cashi.fees.*'
 ```
 
 ## Open Questions
-1- are amounts represented as minor or major units ?
+1. are amounts represented as minor or major units ?
 
-2- can a transaction amount be zero ?? in other words do I need to validate it my assumption is yes
+I treated them as major units — `1000` USD at 0.15%                                                                                                                                      
+gives a fee of `1.50`, which matches the expected response in the brief
 
-3- what do I mean by charging step ??
+2. can a transaction amount be zero ??
+
+I assumed no, and reject `0` and negatives with a 400
+
+3. what do I mean by charging step ??
+
+With no wallet or account in the contract, I read it                                                                                                                                    
+as charging against the same transaction record by charge id and state changing.
 
 ## Resources
 

@@ -74,7 +74,7 @@ class TransactionFeeController(private val restateClient: Client, private val ma
         return ResponseEntity.ok(mapper.toResponse(txn, result))
     }
 
-    @Operation(summary = "Read the current state of a fee workflow")
+    @Operation(summary = "Read the current state of a fee workflow") // in case the POST timed out, this helps to track the state
     @GetMapping("/transaction/{transactionId}/fee")
     fun feeStatus(@PathVariable transactionId: String): ResponseEntity<FeeStatusResponse> {
         val status = runBlocking {
