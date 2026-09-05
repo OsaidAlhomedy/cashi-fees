@@ -21,7 +21,7 @@ data class TransactionFeeRequest(
     @field:Digits(integer = 18, fraction = 4, message = "supports at most 4 decimal places")
     var amount: BigDecimal,
 
-    @field:NotBlank
+    @field:NotBlank // maybe validate against known currenices ?
     val asset: String,
 
     @field:NotBlank

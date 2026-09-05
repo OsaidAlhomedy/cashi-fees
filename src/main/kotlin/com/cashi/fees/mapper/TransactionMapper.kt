@@ -35,7 +35,7 @@ class TransactionMapper {
         )
     }
 
-    fun toStatusResponse(status : FeeStatus) : FeeStatusResponse {
+    fun toStatusResponse(status: FeeStatus): FeeStatusResponse {
         return FeeStatusResponse(
             transactionId = status.transactionId,
             fee = status.quote?.fee,
@@ -47,11 +47,9 @@ class TransactionMapper {
         )
     }
 
-    private fun resolveState(status : FeeStatus) : String? {
-        if (status.quote == null) return TransactionState.PENDING_FEE
-        if(status.charge != null && !status.charge.refunded) return TransactionState.SETTLED
-        if(status.charge != null && status.charge.refunded) return TransactionState.FEE_FAILED
-
-        return null
+    private fun resolveState(status: FeeStatus): String = when {
+        status.charge == null -> TransactionState.PENDING_FEE
+        status.charge.refunded -> TransactionState.FEE_FAILED
+        else -> TransactionState.SETTLED
     }
 }

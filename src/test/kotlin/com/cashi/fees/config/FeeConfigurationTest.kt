@@ -19,7 +19,10 @@ class FeeConfigurationTest {
         runner.run { ctx ->
             val registry = ctx.getBean<FeeRuleRegistry>()
 
-            assertEquals(setOf("MOBILE TOP UP", "BILL PAYMENT","TAX PAYMENT","CHARITY DONATION"), registry.supportedTypes())
+            assertEquals(
+                setOf("MOBILE TOP UP", "BILL PAYMENT", "TAX PAYMENT", "CHARITY DONATION"),
+                registry.supportedTypes()
+            )
             assertEquals(BigDecimal("0.0015"), registry.ruleFor("Mobile Top Up").quote(BigDecimal("1000")).rate)
             assertEquals(BigDecimal("2.00"), registry.ruleFor("Bill Payment").quote(BigDecimal("1000")).fee)
         }

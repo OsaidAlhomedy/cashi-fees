@@ -28,7 +28,7 @@ class FeeChargeService {
         val existing = s.get(CHARGE)
         if (existing != null && !existing.refunded) return existing
 
-        // charging is adding a charge id to the transaction ( no mention for actual charge in the task contract )
+        // charging is adding a charge id to the transaction ( no mention for actual who to charge in the task contract )
         val chargeId = "chg_" + random().nextUUID().toString().take(8)
 
         val feeCharge = FeeCharge(chargeId, request.amount, request.asset)

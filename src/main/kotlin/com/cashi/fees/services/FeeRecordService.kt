@@ -23,8 +23,10 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
         val existing = repository.findById(txn.transactionId).orElse(null)
         if (existing != null) {
             if (existing.amount.compareTo(txn.amount) != 0 || existing.asset != txn.asset) {
-                throw TerminalException(HttpStatus.CONFLICT.value(),
-                    "transaction ${txn.transactionId} already recorded with different details")
+                throw TerminalException(
+                    HttpStatus.CONFLICT.value(),
+                    "transaction ${txn.transactionId} already recorded with different details"
+                )
             }
             return
         }
@@ -47,6 +49,8 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
         if (recordOp.isEmpty) return
 
         val record = recordOp.get()
+        if (record.state != TransactionState.PENDING_FEE) return
+
         if (chargeId != null) record.chargeId = chargeId
         record.state = TransactionState.FEE_FAILED
         repository.save(record)

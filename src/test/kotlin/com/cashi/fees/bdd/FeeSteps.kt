@@ -18,6 +18,7 @@ import kotlin.test.assertTrue
 class FeeSteps {
     @Autowired
     lateinit var rest: TestRestTemplate
+
     @Autowired
     lateinit var repository: FeeRecordRepository
 

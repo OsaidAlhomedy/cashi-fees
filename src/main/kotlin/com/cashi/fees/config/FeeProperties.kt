@@ -17,7 +17,7 @@ data class FeeProperties(
         val description: String,
     )
 
-    enum class RuleType { PERCENTAGE,FIXED,NONE }
+    enum class RuleType { PERCENTAGE, FIXED, NONE }
 }
 
 @Configuration

@@ -101,7 +101,8 @@ class FeeRecordServiceTest {
 
     @Test
     fun `markFailed keeps the existing chargeId when none is supplied`() {
-        val existing = FeeRecord(transactionId = "txn_1", chargeId = "chg_original")
+        val existing =
+            FeeRecord(transactionId = "txn_1", chargeId = "chg_original", state = TransactionState.PENDING_FEE)
         `when`(repository.findById("txn_1")).thenReturn(Optional.of(existing))
 
         service.markFailed("txn_1", null)

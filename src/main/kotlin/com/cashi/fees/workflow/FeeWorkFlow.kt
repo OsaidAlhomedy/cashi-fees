@@ -80,8 +80,10 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
                     )
                 }
             }.onFailure {
-                log.error("mark-failed exhausted for {}: charge {} was compensated but the record is stuck in {}. Needs manual reconciliation",
-                    transaction.transactionId, chargeId, TransactionState.PENDING_FEE, it)
+                log.error(
+                    "mark-failed exhausted for {}: charge {} was compensated but the record is stuck in {}. Needs manual reconciliation",
+                    transaction.transactionId, chargeId, TransactionState.PENDING_FEE, it
+                )
             }
 
             throw e
