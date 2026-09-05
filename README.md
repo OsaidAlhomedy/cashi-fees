@@ -58,7 +58,11 @@ cashi:
 
 ## Tests
 
-    ./gradlew test
+make sure that docker daemon is running first
+
+```bash
+  ./gradlew test --tests 'com.cashi.fees.*'
+```
 
 ## Open Questions
 1- are amounts represented as minor or major units ?

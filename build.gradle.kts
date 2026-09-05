@@ -68,6 +68,25 @@ kotlin {
     compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") }
 }
 
+val cucumberReport = layout.buildDirectory.file("reports/cucumber.html")
+
+val openCucumberReport = tasks.register("openCucumberReport") {
+    description = "Open the test report"
+    onlyIf { !providers.environmentVariable("CI").isPresent }
+    doLast {
+        val report = cucumberReport.get().asFile
+        if (!report.exists()) return@doLast
+
+        val os = System.getProperty("os.name").lowercase()
+        val cmd = when {
+            os.contains("mac") -> listOf("open", report.absolutePath)
+            os.contains("win") -> listOf("rundll32", "url.dll,FileProtocolHandler", report.absolutePath)
+            else -> listOf("xdg-open", report.absolutePath)
+        }
+        ProcessBuilder(cmd).start()
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform {
         includeEngines("junit-jupiter", "junit-platform-suite")
@@ -77,4 +96,6 @@ tasks.withType<Test> {
         "--sun-misc-unsafe-memory-access=allow",
         "-Xshare:off"
     )
+
+    finalizedBy(openCucumberReport)
 }
