@@ -32,8 +32,9 @@ class FeeSteps {
     fun setUp() {
         RestateTestEnvironment.registerDeployment()
         repository.deleteAll()
-        // Restate keeps completed workflow keys forever - a reused id silently takes the
-        // 409-attach path and returns the PREVIOUS scenario's result. Always use a fresh one.
+        // Restate retains a completed workflow's key for its configured retention window (24h by
+        // default), during which a resubmit takes the 409-attach path and returns the PREVIOUS
+        // scenario's result. Always use a fresh id.
         transactionId = "txn-" + UUID.randomUUID()
     }
 
@@ -95,7 +96,7 @@ class FeeSteps {
     fun theFeeRecordIsSettled() {
         val record = repository.findById(transactionId).orElseThrow()
         assertEquals("SETTLED", record.state)
-        assertTrue(record.chargeId.startsWith("chg_"))
+        assertTrue(record.chargeId!!.startsWith("chg_"))
     }
 
     @Then("both responses are identical")

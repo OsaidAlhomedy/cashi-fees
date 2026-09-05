@@ -1,5 +1,6 @@
 package com.cashi.fees.api
 
+import com.cashi.fees.api.dto.FeeStatusResponse
 import com.cashi.fees.api.dto.TransactionFeeRequest
 import com.cashi.fees.api.dto.TransactionFeeResponse
 import com.cashi.fees.mapper.TransactionMapper
@@ -20,9 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import kotlin.time.Duration.Companion.seconds
 
 @RestController
@@ -73,5 +72,15 @@ class TransactionFeeController(private val restateClient: Client, private val ma
         }
 
         return ResponseEntity.ok(mapper.toResponse(txn, result))
+    }
+
+    @Operation(summary = "Read the current state of a fee workflow")
+    @GetMapping("/transaction/{transactionId}/fee")
+    fun feeStatus(@PathVariable transactionId: String): ResponseEntity<FeeStatusResponse> {
+        val status = runBlocking {
+            restateClient.workflow<FeeWorkFlow>(transactionId).status()
+        }
+        if (status.quote == null && status.charge == null) return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(mapper.toStatusResponse(status))
     }
 }

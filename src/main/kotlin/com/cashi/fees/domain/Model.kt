@@ -35,4 +35,5 @@ data class FeeCharge(
     val chargeId: String,
     @Serializable(with = BigDecimalSerializer::class) val amount: BigDecimal,
     val asset: String,
+    val refunded: Boolean = false
 )

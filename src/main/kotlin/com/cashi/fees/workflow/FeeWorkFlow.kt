@@ -7,11 +7,13 @@ import com.cashi.fees.domain.TransactionState
 import com.cashi.fees.services.FeeCalculationService
 import com.cashi.fees.services.FeeChargeService
 import com.cashi.fees.services.FeeRecordService
+import dev.restate.sdk.annotation.Shared
 import dev.restate.sdk.annotation.Workflow
 import dev.restate.sdk.common.TerminalException
 import dev.restate.sdk.kotlin.*
 import dev.restate.sdk.springboot.RestateComponent
 import kotlinx.serialization.Serializable
+import org.slf4j.LoggerFactory
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -20,6 +22,8 @@ import kotlin.time.ExperimentalTime
 @RestateComponent
 @Workflow
 class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Workflow
     @OptIn(ExperimentalTime::class)
@@ -41,10 +45,10 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
 
             state().set(QUOTE, quote)
 
-            // step 2 : record the quote
+            // step 2 : record the quote (if failed after configured retries then terminal)
 
             val quotedAt =
-                Clock.Restate.now() // this is needed in case of replays ( if failed after configured retries then terminal)
+                Clock.Restate.now() // this is needed in case of replays
             runBlock("record-quote", STEP_RETRY) { feeRecordService.recordQuote(transaction, quote, quotedAt) }
 
             compensations.add { virtualObject<FeeChargeService>(transaction.transactionId).refund() }
@@ -75,6 +79,9 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
                         chargeId
                     )
                 }
+            }.onFailure {
+                log.error("mark-failed exhausted for {}: charge {} was compensated but the record is stuck in {}. Needs manual reconciliation",
+                    transaction.transactionId, chargeId, TransactionState.PENDING_FEE, it)
             }
 
             throw e
@@ -103,4 +110,17 @@ class FeeWorkFlow(private val feeRecordService: FeeRecordService) {
         val state: String,
     )
 
+    @Serializable
+    data class FeeStatus(
+        val transactionId: String,
+        val quote: FeeQuote?,
+        val charge: FeeCharge?,
+    )
+
+    @Shared
+    suspend fun status(): FeeStatus = FeeStatus(
+        transactionId = workflowKey(),
+        quote = state().get(QUOTE),
+        charge = state().get(CHARGE),
+    )
 }

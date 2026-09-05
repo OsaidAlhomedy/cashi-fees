@@ -32,8 +32,8 @@ class FeeRecord(
     @Column(nullable = false)
     var description: String = "",
 
-    @Column(name = "charge_id", nullable = false)
-    var chargeId: String = "",
+    @Column(name = "charge_id", nullable = true)
+    var chargeId: String? = null,
 
     @Column(nullable = false)
     var state: String = "",

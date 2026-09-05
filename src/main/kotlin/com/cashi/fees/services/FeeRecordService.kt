@@ -7,7 +7,9 @@ import com.cashi.fees.domain.TransactionState
 import com.cashi.fees.persistence.FeeRecord
 import com.cashi.fees.persistence.FeeRecordRepository
 import com.cashi.fees.shared.Utils
+import dev.restate.sdk.common.TerminalException
 import jakarta.transaction.Transactional
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
@@ -18,7 +20,14 @@ class FeeRecordService(private val repository: FeeRecordRepository) {
 
     @Transactional
     fun recordQuote(txn: Transaction, quote: FeeQuote, at: Instant) {
-        if (repository.existsById(txn.transactionId)) return
+        val existing = repository.findById(txn.transactionId).orElse(null)
+        if (existing != null) {
+            if (existing.amount.compareTo(txn.amount) != 0 || existing.asset != txn.asset) {
+                throw TerminalException(HttpStatus.CONFLICT.value(),
+                    "transaction ${txn.transactionId} already recorded with different details")
+            }
+            return
+        }
         repository.save(newRecord(txn, quote, at))
     }
 

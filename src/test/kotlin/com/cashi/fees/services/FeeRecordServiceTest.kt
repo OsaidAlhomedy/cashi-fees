@@ -23,6 +23,17 @@ class FeeRecordServiceTest {
     )
     private val quote = FeeQuote(BigDecimal("1.50"), BigDecimal("0.0015"), "0.15%")
     private val charge = FeeCharge("chg_abc12345", BigDecimal("1.50"), "USD")
+    private val record = FeeRecord(
+        "txn_1",
+        BigDecimal("1000"),
+        "USD",
+        "MOBILE TOP UP",
+        BigDecimal("1.50"),
+        BigDecimal("0.0015"),
+        "Standard fee rate of 0.15%",
+        "chg_abc12345",
+        TransactionState.SETTLED
+    )
 
     private fun captor(): ArgumentCaptor<FeeRecord> = ArgumentCaptor.forClass(FeeRecord::class.java)
 
@@ -31,7 +42,7 @@ class FeeRecordServiceTest {
 
     @Test
     fun `recordQuote is a no-op when the record already exists`() {
-        `when`(repository.existsById("txn_1")).thenReturn(true)
+        `when`(repository.findById("txn_1")).thenReturn(Optional.of(record))
 
         service.recordQuote(txn, quote, at)
 

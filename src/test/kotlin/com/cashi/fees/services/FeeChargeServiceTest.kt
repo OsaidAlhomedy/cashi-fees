@@ -67,4 +67,18 @@ class FeeChargeServiceTest {
         obj.refund()
     }
 
+    @Test
+    @Timeout(60)
+    fun `charging again after a refund mints a new id, never a null one`() = runBlocking {
+        val obj = client.virtualObject<FeeChargeService>("txn-recharge")
+
+        val first = obj.charge(request("txn-recharge"))
+        obj.refund()
+        val second = obj.charge(request("txn-recharge"))
+
+        assertTrue(second.chargeId.startsWith("chg_"))
+        assertTrue(second.chargeId != first.chargeId, "a reversed charge id must not be reused")
+        assertTrue(!second.refunded)
+    }
+
 }
