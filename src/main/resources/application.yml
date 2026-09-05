@@ -71,7 +71,7 @@ cashi:
       "[Tax Payment]":
         type: FIXED
         rate: 1
-        description: "Fixed fee of 1 asset"
+        description: "Fixed fee of 1 USD"
 
       "[Charity Donation]":
         type: NONE
