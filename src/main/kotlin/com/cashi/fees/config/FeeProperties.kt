@@ -1,8 +1,6 @@
 package com.cashi.fees.config
 
-import com.cashi.fees.domain.fees.FeeRule
-import com.cashi.fees.domain.fees.FeeRuleRegistry
-import com.cashi.fees.domain.fees.PercentageFeeRule
+import com.cashi.fees.domain.fees.*
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -15,11 +13,11 @@ data class FeeProperties(
 ) {
     data class RuleConfig(
         val type: RuleType,
-        val rate: BigDecimal,
+        val rate: BigDecimal?,
         val description: String,
     )
 
-    enum class RuleType { PERCENTAGE }
+    enum class RuleType { PERCENTAGE,FIXED,NONE }
 }
 
 @Configuration
@@ -34,6 +32,15 @@ class FeeConfiguration {
         FeeProperties.RuleType.PERCENTAGE -> PercentageFeeRule(
             rate = requireNotNull(rate) { "rule '$type' is PERCENTAGE but has no rate" },
             description = description,
+        )
+
+        FeeProperties.RuleType.FIXED -> FixedFeeRule(
+            rate = requireNotNull(rate) { "rule '$type' is FIXED but has no amount" },
+            description = description
+        )
+
+        FeeProperties.RuleType.NONE -> NoneFeeRule(
+            description = description
         )
     }
 

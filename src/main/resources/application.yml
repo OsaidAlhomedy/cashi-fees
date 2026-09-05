@@ -67,3 +67,12 @@ cashi:
         type: PERCENTAGE
         rate: 0.0020
         description: "Standard fee rate of 0.20%"
+
+      "[Tax Payment]":
+        type: FIXED
+        rate: 1
+        description: "Fixed fee of 1 asset"
+
+      "[Charity Donation]":
+        type: NONE
+        description: "Donations are fees free"
